@@ -6,7 +6,7 @@
         <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div class="space-y-6">
                 <p class="text-sm uppercase tracking-[0.3em] text-[#E85F05]">Orange marketplace</p>
-                <h1 class="max-w-3xl text-5xl font-semibold tracking-tight text-[#2B1F14] sm:text-6xl">Shop premium products with bright, bold style.</h1>
+                <h1 class="max-w-3xl text-5xl font-semibold tracking-tight text-[#2B1F14] sm:text-6xl">I changed this from what it used to say before.</h1>
                 <p class="max-w-2xl text-base leading-8 text-[#59432A]">Browse curated goods, discover fresh arrivals, and complete checkout with ease. Designed for a warm shopping experience using rich shades of orange and soft gold tones.</p>
                 <div class="flex flex-wrap gap-4">
                     <a href="{{ route('products.index') }}" class="inline-flex items-center justify-center rounded-3xl bg-[#FF7A18] px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-[#FF7A1860] transition hover:bg-[#FF8F3A]">Start shopping</a>
