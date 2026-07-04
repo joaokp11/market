@@ -20,13 +20,15 @@ Route::get('/admin/products', function () {
 })->name('admin.products.index');
 
 Route::get('/admin/products/create', function () {
-    return view('admin.products.create');
+    $products = \App\Models\Product::latest()->get();
+    return view('admin.products.create', compact('products'));
 })->name('admin.products.create');
 
 Route::post('/admin/products/create', [ProductController::class, 'store'])->name('admin.products.store');
 
 Route::get('/admin/products/{product}/edit', function (\App\Models\Product $product) {
-    return view('admin.products.edit', compact('product'));
+    $products = \App\Models\Product::latest()->get();
+    return view('admin.products.edit', compact('product', 'products'));
 })->name('admin.products.edit');
 
 Route::get('/admin/products/{product}', function (\App\Models\Product $product) {
@@ -41,5 +43,4 @@ Route::get('/products', function () {
 Route::post('/admin/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
 
 Route::delete('/admin/products/{product}/', [ProductController::class, 'delete'] )->name('admin.products.destroy');
-
 

@@ -1,68 +1,133 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-8">
-    <header class="rounded-[36px] bg-[#FFF3E8] p-8 shadow-[0_24px_70px_rgba(255,122,24,0.14)] ring-1 ring-[#F5C38B]">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-                <p class="text-sm uppercase tracking-[0.3em] text-[#E05A00]">Admin dashboard</p>
-                <h1 class="mt-3 text-4xl font-semibold tracking-tight text-[#2B1F14]">Manage products with ease</h1>
-                <p class="mt-3 max-w-2xl text-base leading-7 text-[#6A4A2D]">A polished admin view for viewing, creating, and editing marketplace products without touching controllers or models.</p>
-            </div>
-            <button type="button" class="inline-flex items-center justify-center rounded-3xl bg-[#FF7A18] px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-[#FF7A1860] transition hover:bg-[#FF8B35]">+ Create product</button>
-        </div>
-    </header>
+@php
+    $productCount = count($products);
+    $inventoryTotal = $products->sum('inventory');
+    $lowStockCount = $products->filter(fn ($product) => $product->inventory <= 5)->count();
+@endphp
 
-    <section class="grid gap-6 lg:grid-cols-2">
-               <div class="rounded-[32px] bg-[#FFF7ED] p-6 shadow-[0_20px_60px_rgba(255,132,41,0.1)] ring-1 ring-[#F6D0A0]">
-            <p class="text-sm uppercase tracking-[0.3em] text-[#E05A00]">Edit product</p>
-            <h3 class="mt-3 text-2xl font-semibold text-[#2B1F14]">Update an existing item</h3>
-            <form class="mt-6 space-y-4" method="POST" action="{{ route('admin.products.update', $product->id) }}" enctype="multipart/form-data">
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-[#6A4A2D]">Product name</label>
-                    <input type="text" placeholder="Enter product name" class="w-full rounded-3xl border border-[#F2CFA4] bg-white px-4 py-3 text-sm outline-none focus:border-[#FF7A18] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('name', $product->name) }}" name='name'/>
-                    @error('name')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+<div class="grid gap-5 lg:grid-cols-[280px_1fr]">
+    <aside class="lg:sticky lg:top-5 lg:self-start">
+        <div class="border border-[#D6C0A8] bg-[#1F1B16] p-5 text-white shadow-[10px_10px_0_rgba(31,27,22,0.10)]">
+            <a href="{{ url('/') }}" class="inline-flex items-center gap-3 text-sm font-black uppercase tracking-[0.2em]">
+                <span class="grid h-10 w-10 place-items-center bg-[#FF7A18]">
+                    <svg class="h-5 w-5 animate-market-draw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 13h8V3H3v10Z" />
+                        <path d="M13 21h8V3h-8v18Z" />
+                        <path d="M3 21h8v-6H3v6Z" />
+                    </svg>
+                </span>
+                Admin
+            </a>
+
+            <div class="mt-8 space-y-2">
+                <a href="/admin/dashboard" class="flex items-center justify-between border border-white/15 px-4 py-3 text-sm font-semibold text-white/75 transition hover:bg-white hover:text-[#1F1B16]">Dashboard</a>
+                <a href="{{ route('admin.products.index') }}" class="flex items-center justify-between bg-white px-4 py-3 text-sm font-black text-[#1F1B16]">
+                    Products
+                    <span class="h-2 w-2 bg-[#FF7A18] animate-market-pulse"></span>
+                </a>
+                <a href="{{ route('admin.products.create') }}" class="flex items-center justify-between border border-white/15 px-4 py-3 text-sm font-semibold text-white/75 transition hover:bg-white hover:text-[#1F1B16]">Create</a>
+                <a href="{{ route('products.index') }}" class="flex items-center justify-between border border-white/15 px-4 py-3 text-sm font-semibold text-white/75 transition hover:bg-white hover:text-[#1F1B16]">Storefront</a>
+            </div>
+
+            <div class="mt-8 border-t border-white/15 pt-5">
+                <p class="text-xs font-bold uppercase tracking-[0.25em] text-[#FFB47B]">Quick status</p>
+                <div class="mt-4 grid gap-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-white/60">Products</span>
+                        <span class="font-black">{{ $productCount }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white/60">Inventory</span>
+                        <span class="font-black">{{ $inventoryTotal }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white/60">Low stock</span>
+                        <span class="font-black text-[#FFB47B]">{{ $lowStockCount }}</span>
+                    </div>
                 </div>
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-[#6A4A2D]">Updated price</label>
-                    <input type="text" placeholder="$0.00" class="w-full rounded-3xl border border-[#F2CFA4] bg-white px-4 py-3 text-sm outline-none focus:border-[#FF7A18] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('price', $product->price) }}" name='price'/>
-                    @error('price')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                        <label class="mb-2 block text-sm font-medium text-[#6A4A2D]">Category</label>
-                        <input type="text" name="category" placeholder="Category" class="w-full rounded-3xl border border-[#F2CFA4] bg-white px-4 py-3 text-sm outline-none focus:border-[#FF7A18] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('category', $product->category) }}" name='category'/>
-                            @error('category')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-[#6A4A2D]">Inventory</label>
-                    <input type="text" placeholder="Enter stock" class="w-full rounded-3xl border border-[#F2CFA4] bg-white px-4 py-3 text-sm outline-none focus:border-[#FF7A18] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('inventory', $product->inventory) }}" name='inventory'/>
-                    @error('inventory')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-[#6A4A2D]">Description</label>
-                    <textarea rows="4" name="description" placeholder="Write a short description" class="w-full rounded-[24px] border border-[#F2CFA4] bg-white px-4 py-3 text-sm outline-none focus:border-[#FF7A18] focus:ring-4 focus:ring-[#FF7A1833]" value="">{{ old('description', $product->description) }}</textarea>
-                        @error('description')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                </div>
-                <div>
-                    <label class="mb-2 block text-sm font-medium text-[#6A4A2D]">Product image</label>
-                    <input type="file" name="image" class="w-full rounded-3xl border border-[#F2CFA4] bg-white px-4 py-3 text-sm outline-none focus:border-[#FF7A18] focus:ring-4 focus:ring-[#FF7A1833]" />
-                    @error('image')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-                <button type="submit" class="rounded-3xl bg-[#FF7A18] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#FF8B35]">Update product</button>
-            </form>
+            </div>
         </div>
-    </section>
+    </aside>
+
+    <main class="space-y-5">
+        <header class="border border-[#D6C0A8] bg-[#FFF9F1] p-6 shadow-[10px_10px_0_rgba(31,27,22,0.08)]">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p class="text-sm font-bold uppercase tracking-[0.3em] text-[#C64E00]">Edit product</p>
+                    <h1 class="mt-3 text-4xl font-black tracking-tight text-[#1F1B16]">{{ $product->name }}</h1>
+                    <p class="mt-3 max-w-2xl text-base leading-7 text-[#6A4A2D]">Update product details in the same focused admin workspace as the dashboard.</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a class="inline-flex items-center bg-[#FF7A18] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1F1B16]" href="{{ route('admin.products.index') }}">All products</a>
+                    <a class="inline-flex items-center border border-[#BFA98F] bg-white px-5 py-3 text-sm font-black text-[#1F1B16] transition hover:border-[#1F1B16]" href="{{ route('admin.products.show', $product->id) }}">View product</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="border border-[#D6C0A8] bg-white">
+            <div class="border-b border-[#D6C0A8] p-5">
+                <p class="text-sm font-bold uppercase tracking-[0.3em] text-[#C64E00]">Product details</p>
+                <h2 class="mt-2 text-2xl font-black text-[#1F1B16]">Update listing information</h2>
+            </div>
+
+            <form class="space-y-5 p-5" method="POST" action="{{ route('admin.products.update', $product->id) }}" enctype="multipart/form-data">
+                @csrf
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-[#6A4A2D]">Product name</label>
+                    <input type="text" placeholder="Enter product name" class="w-full border border-[#D6C0A8] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('name', $product->name) }}" name="name" />
+                    @error('name')
+                        <p class="mt-2 text-sm font-semibold text-[#B42318]">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <label class="mb-2 block text-sm font-bold text-[#6A4A2D]">Category</label>
+                        <input type="text" name="category" placeholder="Category" class="w-full border border-[#D6C0A8] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('category', $product->category) }}" />
+                        @error('category')
+                            <p class="mt-2 text-sm font-semibold text-[#B42318]">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-bold text-[#6A4A2D]">Price</label>
+                        <input type="number" placeholder="0.00" class="w-full border border-[#D6C0A8] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('price', $product->price) }}" name="price" />
+                        @error('price')
+                            <p class="mt-2 text-sm font-semibold text-[#B42318]">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-bold text-[#6A4A2D]">Inventory</label>
+                        <input type="number" placeholder="Enter stock" class="w-full border border-[#D6C0A8] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]" value="{{ old('inventory', $product->inventory) }}" name="inventory" />
+                        @error('inventory')
+                            <p class="mt-2 text-sm font-semibold text-[#B42318]">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-[#6A4A2D]">Description</label>
+                    <textarea rows="5" name="description" placeholder="Write a short description" class="w-full border border-[#D6C0A8] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]">{{ old('description', $product->description) }}</textarea>
+                    @error('description')
+                        <p class="mt-2 text-sm font-semibold text-[#B42318]">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-[#6A4A2D]">Product image</label>
+                    <input type="file" name="image" class="w-full border border-[#D6C0A8] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]" />
+                    @error('image')
+                        <p class="mt-2 text-sm font-semibold text-[#B42318]">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex flex-wrap gap-3 border-t border-[#EFE0CF] pt-5">
+                    <button type="submit" class="bg-[#FF7A18] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1F1B16]">Update product</button>
+                    <a href="{{ route('admin.products.index') }}" class="border border-[#BFA98F] bg-white px-5 py-3 text-sm font-black text-[#1F1B16] transition hover:border-[#1F1B16]">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
 </div>
 @endsection
