@@ -37,22 +37,105 @@ Route::get('/admin/products/{product}', function (\App\Models\Product $product) 
 
 Route::get('/products', function () {
     $products = \App\Models\Product::latest()->get();
-    return view('show-products', compact('products'));
+    $cart = session('cart', []);
+    $cartProducts = \App\Models\Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+    $cartTotal = collect($cart)->sum(fn ($quantity, $productId) => optional($cartProducts->get((int) $productId))->price * (int) $quantity);
+    $cartQuantity = collect($cart)->sum();
+
+    return view('show-products', compact('products', 'cartTotal', 'cartQuantity'));
 })->name('products.index');
 
-Route::get('/checkout/{product}', function (\App\Models\Product $product) {
-    return view('checkout', compact('product'));
+Route::post('/cart/{product}', function (Request $request, \App\Models\Product $product) {
+    if ($product->inventory < 1) {
+        return redirect()->route('products.index')->with('success', "{$product->name} is out of stock.");
+    }
+
+    $quantity = max(1, (int) $request->input('quantity', 1));
+    $cart = session('cart', []);
+    $currentQuantity = (int) ($cart[$product->id] ?? 0);
+    $cart[$product->id] = min($product->inventory, $currentQuantity + $quantity);
+
+    session(['cart' => $cart]);
+
+    return redirect()->route('products.index')->with('success', "{$product->name} added to cart.");
+})->name('cart.add');
+
+Route::patch('/cart/{product}', function (Request $request, \App\Models\Product $product) {
+    $action = $request->input('action');
+    $cart = session('cart', []);
+    $quantity = (int) ($cart[$product->id] ?? 0);
+
+    if ($action === 'increase') {
+        $quantity = min($product->inventory, $quantity + 1);
+    } elseif ($action === 'decrease') {
+        $quantity = max(0, $quantity - 1);
+    } else {
+        $quantity = max(0, min($product->inventory, (int) $request->input('quantity', $quantity)));
+    }
+
+    if ($quantity > 0) {
+        $cart[$product->id] = $quantity;
+    } else {
+        unset($cart[$product->id]);
+    }
+
+    session(['cart' => $cart]);
+
+    return redirect()->route('checkout');
+})->name('cart.update');
+
+Route::delete('/cart/{product}', function (\App\Models\Product $product) {
+    $cart = session('cart', []);
+    unset($cart[$product->id]);
+    session(['cart' => $cart]);
+
+    return redirect()->route('checkout');
+})->name('cart.remove');
+
+Route::get('/checkout', function () {
+    $cart = session('cart', []);
+    $products = \App\Models\Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+
+    $cartItems = collect($cart)
+        ->map(function ($quantity, $productId) use ($products) {
+            $product = $products->get((int) $productId);
+
+            if (! $product) {
+                return null;
+            }
+
+            if ($product->inventory < 1) {
+                return null;
+            }
+
+            $quantity = max(1, min((int) $quantity, $product->inventory));
+
+            return [
+                'product' => $product,
+                'quantity' => $quantity,
+                'lineTotal' => $product->price * $quantity,
+            ];
+        })
+        ->filter()
+        ->values();
+
+    $cartTotal = $cartItems->sum('lineTotal');
+    $cartQuantity = $cartItems->sum('quantity');
+
+    return view('checkout', compact('cartItems', 'cartTotal', 'cartQuantity'));
 })->name('checkout');
 
 Route::get('/products/search', function (Request $request) {
     $query = $request->input('query');
     $products = \App\Models\Product::where('name', 'like', "%$query%")->latest()->get();
-    return view('show-products', compact('products'));
+    $cart = session('cart', []);
+    $cartProducts = \App\Models\Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+    $cartTotal = collect($cart)->sum(fn ($quantity, $productId) => optional($cartProducts->get((int) $productId))->price * (int) $quantity);
+    $cartQuantity = collect($cart)->sum();
+
+    return view('show-products', compact('products', 'cartTotal', 'cartQuantity'));
 })->name('products.search');
 
 Route::post('/admin/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
 
 Route::delete('/admin/products/{product}/', [ProductController::class, 'delete'] )->name('admin.products.destroy');
-
-
-

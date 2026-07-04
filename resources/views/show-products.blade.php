@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $cartQuantity = $cartQuantity ?? 0;
+    $cartTotal = $cartTotal ?? 0;
+@endphp
+
 <div class="space-y-12">
     <header class="sticky top-4 z-50 border border-[#D6C0A8] bg-[#FFF9F1]/95 shadow-[8px_8px_0_rgba(31,27,22,0.08)] backdrop-blur">
         <nav class="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6">
@@ -21,6 +26,7 @@
                 <a href="#collections" class="px-4 py-3 text-sm font-semibold text-[#5B4631] transition hover:bg-[#1F1B16] hover:text-white">Products</a>
                 <a href="#workflow" class="px-4 py-3 text-sm font-semibold text-[#5B4631] transition hover:bg-[#1F1B16] hover:text-white">Workflow</a>
                 <a href="{{ route('products.index') }}" class="px-4 py-3 text-sm font-semibold text-[#5B4631] transition hover:bg-[#1F1B16] hover:text-white">Shop</a>
+                <a href="{{ route('checkout') }}" class="px-4 py-3 text-sm font-semibold text-[#5B4631] transition hover:bg-[#1F1B16] hover:text-white">Cart ({{ $cartQuantity }})</a>
                 <a href="/admin/dashboard" class="ml-2 inline-flex items-center gap-2 bg-[#1F1B16] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#FF7A18]">
                     <svg class="h-4 w-4 animate-market-float" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 13h8V3H3v10Z" />
@@ -37,6 +43,7 @@
                     <a href="#collections" class="border-b border-[#EFE0CF] px-4 py-3 text-sm font-semibold">Products</a>
                     <a href="#workflow" class="border-b border-[#EFE0CF] px-4 py-3 text-sm font-semibold">Workflow</a>
                     <a href="{{ route('products.index') }}" class="border-b border-[#EFE0CF] px-4 py-3 text-sm font-semibold">Shop</a>
+                    <a href="{{ route('checkout') }}" class="border-b border-[#EFE0CF] px-4 py-3 text-sm font-semibold">Cart ({{ $cartQuantity }})</a>
                     <a href="/admin/dashboard" class="px-4 py-3 text-sm font-semibold text-[#C64E00]">Dashboard</a>
                 </div>
             </details>
@@ -74,6 +81,23 @@
     </header>
 
     <section id="products" class="space-y-8">
+        @if (session('success'))
+            <div class="border border-[#D6C0A8] bg-white p-4 text-sm font-bold text-[#1F1B16] shadow-[8px_8px_0_rgba(31,27,22,0.08)]">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <div class="grid gap-4 border border-[#D6C0A8] bg-[#1F1B16] p-5 text-white shadow-[10px_10px_0_rgba(31,27,22,0.10)] md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-[0.3em] text-[#FFB47B]">Cart status</p>
+                <p class="mt-2 text-2xl font-black">{{ $cartQuantity }} {{ Str::plural('item', $cartQuantity) }} selected</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="bg-white px-5 py-3 text-sm font-black text-[#1F1B16]">Total: ${{ number_format($cartTotal, 2) }}</span>
+                <a href="{{ route('checkout') }}" class="bg-[#FF7A18] px-5 py-3 text-sm font-black text-white transition hover:bg-white hover:text-[#1F1B16]">Checkout</a>
+            </div>
+        </div>
+
         <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-sm uppercase tracking-[0.3em] text-[#E65800]">Products</p>
@@ -116,7 +140,7 @@
     ];
 @endphp
 
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <button type="button"
                                         class="inline-flex items-center gap-2 bg-[#FF7A18] px-4 py-2 text-xs font-black text-white transition hover:bg-[#1F1B16]"
                                         data-product='@json($productData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)'
@@ -127,9 +151,14 @@
                                         <path d="m13 6 6 6-6 6" />
                                     </svg>
                                 </button>
-                                <a href="{{ route('checkout', $product) }}" class="inline-flex items-center justify-center rounded-none bg-[#1F1B16] px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#FF7A18]">
-                                    Add to cart
-                                </a>
+                                <form action="{{ route('cart.add', $product) }}" method="POST" class="flex items-center gap-2">
+                                    @csrf
+                                    <label class="sr-only" for="quantity-{{ $product->id }}">Quantity for {{ $product->name }}</label>
+                                    <input id="quantity-{{ $product->id }}" type="number" name="quantity" min="1" max="{{ max(1, $product->inventory) }}" value="1" class="h-9 w-16 border border-[#D6C0A8] bg-white px-2 text-center text-xs font-black text-[#1F1B16] outline-none focus:border-[#1F1B16] focus:ring-4 focus:ring-[#FF7A1833]" {{ $product->inventory < 1 ? 'disabled' : '' }} />
+                                    <button type="submit" class="inline-flex h-9 items-center justify-center bg-[#1F1B16] px-4 text-xs font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#FF7A18] disabled:cursor-not-allowed disabled:bg-[#8A6B4E]" {{ $product->inventory < 1 ? 'disabled' : '' }}>
+                                        {{ $product->inventory < 1 ? 'Out' : 'Add' }}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
