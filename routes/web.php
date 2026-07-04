@@ -40,6 +40,10 @@ Route::get('/products', function () {
     return view('show-products', compact('products'));
 })->name('products.index');
 
+Route::get('/checkout/{product}', function (\App\Models\Product $product) {
+    return view('checkout', compact('product'));
+})->name('checkout');
+
 Route::get('/products/search', function (Request $request) {
     $query = $request->input('query');
     $products = \App\Models\Product::where('name', 'like', "%$query%")->latest()->get();
