@@ -106,27 +106,23 @@
                         <div class="flex items-center justify-between gap-3 border-t border-[#EFE0CF] pt-4 text-sm text-[#1F1B16]">
                             <span class="font-black">${{ number_format($product->price, 2) }}</span>
                             @php
-    $productData = [
-        'name' => $product->name,
-        'category' => $product->category,
-        'price' => number_format($product->price, 2),
-        'inventory' => $product->inventory,
-        'description' => $product->description ?: 'No description available.',
-        'image' => $product->image_url ? asset('storage/' . $product->image_url) : null,
-    ];
-@endphp
+                        $productData = [
+                        'name' => $product->name,
+                        'category' => $product->category,
+                        'price' => number_format($product->price, 2),
+                        'inventory' => $product->inventory,
+                        'description' => $product->description ?: 'No description available.',
+                        'image' => $product->image_url ? asset('storage/' . $product->image_url) : null,
+                        ];
+            @endphp
 
-                            <div class="flex items-center gap-2">
-                                <button type="button"
-                                        class="inline-flex items-center gap-2 bg-[#FF7A18] px-4 py-2 text-xs font-black text-white transition hover:bg-[#1F1B16]"
-                                        data-product='@json($productData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)'
-                                        onclick="openProductModal(this.dataset.product)">
-                                    View
-                                    <svg class="h-3.5 w-3.5 transition group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M5 12h14" />
-                                        <path d="m13 6 6 6-6 6" />
-                                    </svg>
-                                </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" class="inline-flex items-center gap-2 bg-[#FF7A18] px-4 py-2 text-xs font-black text-white transition hover:bg-[#1F1B16]"data-product='@json($productData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)' onclick="openProductModal(this.dataset.product)">View
+                                <svg class="h-3.5 w-3.5 transition group-hover:translate-x-1"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14" />
+                                    <path d="m13 6 6 6-6 6" />
+                                </svg>        
+                            </button>
                                 <a href="{{ route('checkout', $product) }}" class="inline-flex items-center justify-center rounded-none bg-[#1F1B16] px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white transition hover:bg-[#FF7A18]">
                                     Add to cart
                                 </a>
